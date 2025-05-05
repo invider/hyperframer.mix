@@ -22,6 +22,10 @@ function stream(src) {
         return src.charAt(pos)
     }
 
+    function lookAhead(n) {
+        return src.charAt(pos + n - 1)
+    }
+
     // skip the next character on the stream
     function skipc() {
         pos ++
@@ -59,6 +63,7 @@ function stream(src) {
         getc,
         retc,
         aheadc,
+        lookAhead,
         skipc,
         eatc,
         eos,
