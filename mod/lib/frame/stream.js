@@ -39,6 +39,11 @@ function stream(src) {
         return i
     }
 
+    function seek(at) {
+        pos = clamp(at, 0, src.length)
+        return pos
+    }
+
     function eos() {
         return (pos >= src.length)
     }
@@ -66,6 +71,7 @@ function stream(src) {
         lookAhead,
         skipc,
         eatc,
+        seek,
         eos,
         //expectc,
         //notc,

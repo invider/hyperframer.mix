@@ -1,3 +1,5 @@
+const TAB = 4
+
 function isSpace(c) {
     return c === ' ' || c === '\t'
 }
@@ -47,9 +49,9 @@ function lexer(stream) {
 
     const lines = [],
           lineMarks = [ cur() ]
-    let   lineNum = 0
+    let lineNum = 0
 
-    function lineAtPos(pos) {
+    function lineCoordAt(pos) {
         // TODO figure out what to do if the pos is not parsed yet or outside of the parsing window (< start)!
         for (let i = 0; i < lineMarks.length; i++) {
             const mark = lineMarks[i]
@@ -91,7 +93,7 @@ function lexer(stream) {
         pos = pos ?? cur()
         nextLine() // make sure we have buffered the current line for proper output
 
-        const at    = lineAtPos(pos),
+        const at    = lineCoordAt(pos),
               lines = extractLines(at.lineNum - 4, at.lineNum)
               
         throw new Error(`${msg} @${at.lineNum+1}.${at.linePos+1}:\n${lines}\n${lpad('', at.linePos)}^`)
@@ -115,7 +117,9 @@ function lexer(stream) {
     function nextLine() {
         if (eos()) return
 
-        const buf = []
+        const at  = cur(),
+              ln  = lineNum,
+              buf = []
         let   curLine = true
 
         while (curLine) {
@@ -126,7 +130,21 @@ function lexer(stream) {
             }
         }
 
-        return buf.join('')
+        return {
+            type: 'line',
+            at:   at,
+            ln:   ln,
+            val:  buf.join(''),
+            len:  buf.length,
+            til:  cur(),
+        }
+    }
+
+    function seek(pos) {
+        const newPos = stream.seek(pos)
+        const at = lineCoordAt(newPos)
+        lineNum = at.lineNum
+        return newPos
     }
 
     return {
@@ -134,6 +152,7 @@ function lexer(stream) {
         stream,
         nextLine,
 
+        seek,
         curLine: () => lineNum,
     }
 }
