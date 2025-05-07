@@ -1,0 +1,19 @@
+#slides
+
+Locked Data
+===========
+
+- proprietary formats
+- stored in custom DB schemas
+- hold hostage by cloud software providers
+
+Our data needs to be saved!
+===========================
+
+HyperFrame
+==========
+- plain-text
+- free-form database
+- lightweight markup
+- microformats
+
