@@ -72,7 +72,7 @@ function parse(src, name, path) {
                     } else {
                         // TODO throw away prev line?
                         // rewind to the prev position
-                        lexer.seek(prev.at)
+                        lexer.rewind(prev.at - stream.cur())
                         frame.til = prev.at - 1
                         frame.src = stream.src.substring(frame.at, frame.til)
                         return frame

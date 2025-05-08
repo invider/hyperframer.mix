@@ -1,5 +1,8 @@
 function stream(src) {
+
     let pos = 0
+
+    const marks = []
 
     // return current stream position
     function cur() {
@@ -44,6 +47,20 @@ function stream(src) {
         return pos
     }
 
+    function mark() {
+        marks.push(this.pos)
+    }
+
+    function restore() {
+        if (marks.length === 0) throw new Error("Can't restore - marks stack is empty!")
+        pos = marks.pop()
+    }
+
+    function drop() {
+        if (marks.length === 0) throw new Error("Can't drop - marks stack is empty!")
+        marks.pop()
+    }
+
     function eos() {
         return (pos >= src.length)
     }
@@ -72,6 +89,9 @@ function stream(src) {
         skipc,
         eatc,
         seek,
+        mark,
+        restore,
+        drop,
         eos,
         //expectc,
         //notc,

@@ -140,8 +140,10 @@ function lexer(stream) {
         }
     }
 
-    function seek(pos) {
-        const newPos = stream.seek(pos)
+    function rewind(shift) {
+        const askPos = cur() + shift
+        if (shift > 0 || askPos < 0) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
+        const newPos = stream.seek(askPos)
         const at = lineCoordAt(newPos)
         lineNum = at.lineNum
         return newPos
@@ -152,7 +154,8 @@ function lexer(stream) {
         stream,
         nextLine,
 
-        seek,
+        rewind,
         curLine: () => lineNum,
     }
+
 }
