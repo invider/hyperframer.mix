@@ -1,4 +1,6 @@
-function stream(src) {
+function stream(srcSlice) {
+
+    const src = srcSlice.toString()
 
     let pos = 0
 

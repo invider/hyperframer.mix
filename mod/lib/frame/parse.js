@@ -39,7 +39,7 @@ function matchFlags(tags) {
 
 function parse(src, name, path) {
     const flags = {}
-    const stream = lib.frame.stream(src)
+    const stream = lib.frame.stream(new dna.SourceSlice(src, 0, src.length - 1))
     const lexer = lib.frame.lexer(stream)
 
     function doFrame(level, title) {
