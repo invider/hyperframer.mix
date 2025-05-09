@@ -45,56 +45,18 @@ function lpad(s, N) {
 }
 
 function lexer(stream) {
-    const { cur, getc, retc, aheadc, skipc, eos, src } = stream
+    const { cur, getc, retc, aheadc, skipc, eos } = stream
 
     const lines = [],
           lineMarks = [ cur() ]
     let lineNum = 0
 
-    function lineCoordAt(pos) {
-        // TODO figure out what to do if the pos is not parsed yet or outside of the parsing window (< start)!
-        for (let i = 0; i < lineMarks.length; i++) {
-            const mark = lineMarks[i]
-            if (pos < mark) return {
-                lineNum: i - 1,
-                linePos: pos - lineMarks[i - 1]
-            }
-        }
-        return {
-            lineNum: lineNum,
-            linePos: pos - lineMarks[lineNum]
-        }
-    }
-
-    function extractLine(ln) {
-        if (ln < 0) return
-
-        if (ln < lineNum) {
-            return lines[ln]
-        } else {
-            const lines = stream.src.split('\n').map(l => {
-                if (l.endsWith('\r')) return l.substring(l.length - 1)
-                else return l
-            })
-            return lines[ln]
-        }
-    }
-
-    function extractLines(from, to) {
-        const buf = []
-        for (let ln = from; ln <= to; ln++) {
-            const line = extractLine(ln) 
-            if (line !== undefined) buf.push(line)
-        }
-        return buf.join('\n')
-    }
 
     function xerr(msg, pos) {
         pos = pos ?? cur()
-        nextLine() // make sure we have buffered the current line for proper output
 
-        const at    = lineCoordAt(pos),
-              lines = extractLines(at.lineNum - 4, at.lineNum)
+        const at    = stream.slice.lineCoordAt(pos),
+              lines = stream.slice.extractLines(at.lineNum - 4, at.lineNum)
               
         throw new Error(`${msg} @${at.lineNum+1}.${at.linePos+1}:\n${lines}\n${lpad('', at.linePos)}^`)
     }
@@ -104,6 +66,7 @@ function lexer(stream) {
 
         const startsAt = lineMarks[lineNum],
               endsAt   = cur(),
+              // TODO not optimal - refactor out to the root slice
               line     = stream.src.substring(startsAt, endsAt),
               c = getc()
         if (c === '\r' && aheadc() === '\n') skipc()
@@ -144,7 +107,7 @@ function lexer(stream) {
         const askPos = cur() + shift
         if (shift > 0 || askPos < 0) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
         const newPos = stream.seek(askPos)
-        const at = lineCoordAt(newPos)
+        const at = stream.slice.lineCoordAt(newPos)
         lineNum = at.lineNum
         return newPos
     }

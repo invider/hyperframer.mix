@@ -1,8 +1,8 @@
-function stream(srcSlice) {
+function stream(sliceOrSource) {
+    const slice = isStr(sliceOrSource)? new dna.SourceSlice(sliceOrSource) : sliceOrSource
+    const src   = slice.getSource()
 
-    const src = srcSlice.toString()
-
-    let pos = 0
+    let pos = slice.start
 
     const marks = []
 
@@ -11,24 +11,32 @@ function stream(srcSlice) {
         return pos
     }
 
+    function sliceAt() {
+        return pos - slice.start
+    }
+
     // get current character from the stream
     function getc() {
+        if (pos < slice.start || pos > slice.end) return
         return src.charAt(pos++)
     }
 
     // return a character back to the stream (decrement position)
     function retc() {
-        if (pos === 0) throw new Error('Nothing to return!')
+        if (pos <= slice.start) throw new Error('Nothing to return!')
         pos --
     }
 
     // return the character ahead - the next that is going to be returned by getc()
     function aheadc() {
+        if (pos < slice.start || pos > slice.end) return
         return src.charAt(pos)
     }
 
     function lookAhead(n) {
-        return src.charAt(pos + n - 1)
+        const next = pos + n - 1
+        if (next < slice.start || next > slice.end) return
+        return src.charAt(next)
     }
 
     // skip the next character on the stream
@@ -45,12 +53,12 @@ function stream(srcSlice) {
     }
 
     function seek(at) {
-        pos = clamp(at, 0, src.length)
+        pos = clamp(at, slice.start, slice.end)
         return pos
     }
 
     function mark() {
-        marks.push(this.pos)
+        marks.push(pos)
     }
 
     function restore() {
@@ -64,7 +72,7 @@ function stream(srcSlice) {
     }
 
     function eos() {
-        return (pos >= src.length)
+        return (pos > slice.end)
     }
 
     /*
@@ -83,6 +91,8 @@ function stream(srcSlice) {
 
     return {
         src,
+        slice,
+
         cur,
         getc,
         retc,

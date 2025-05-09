@@ -39,11 +39,11 @@ function matchFlags(tags) {
 
 function parse(src, name, path) {
     const flags = {}
-    const stream = lib.frame.stream(new dna.SourceSlice(src, 0, src.length - 1))
+    const stream = lib.frame.stream(src)
     const lexer = lib.frame.lexer(stream)
 
-    function doFrame(level, title) {
-        const frame = new $.dna.HyperFrame({
+    function doFrame(level, title, nextFrame) {
+        const frame = nextFrame || new dna.HyperFrame({
             at:     stream.cur(),
             level:  level,
             title:  title ?? '',
@@ -57,30 +57,56 @@ function parse(src, name, path) {
         while (line !== undefined) {
             //log(`#${line.ln+1}:[${line.val}]`)
 
+            // multi-line header
             if (prev && prev.val.length > 0) {
+                // we had a non-empty line before this one
 
-                let header = matchHeaders(line.val)
-                if (header) {
-                    frame.lines.pop()
-                    frame.tokens.pop()
-                    if (header.level > level) {
+                let headerTk = matchHeaders(line.val)
+                if (headerTk) {
+                    const headerTitle = frame.lines.pop()
+                    const lastToken   = frame.tokens.pop()
+                    if (headerTk.level > level) {
+                        const nextFrame = new dna.HyperFrame({
+                            at:     lastToken.at,
+                            level:  level,
+                            title:  title ?? '',
+                            lines:  [],
+                            tokens: [],
+                        })
+                        nextFrame.lines.push(headerTitle)
+                        nextFrame.tokens.push(lastToken)
+                        nextFrame.lines.push(line.val)
+                        nextFrame.tokens.push(headerTk)
 
-                        const subFrame = doFrame(header.level, prev.val)
+                        const subFrame = doFrame(headerTk.level, prev.val, nextFrame)
                         if (subFrame) frame.attach(subFrame)
 
                         line = null
                     } else {
+                        // same level - close the current frame and return
                         // TODO throw away prev line?
                         // rewind to the prev position
                         lexer.rewind(prev.at - stream.cur())
                         frame.til = prev.at - 1
-                        frame.src = stream.src.substring(frame.at, frame.til)
+                        //frame.src = stream.src.substring(frame.at, frame.til)
+                        // detected the frame end, perfect time to create a slice for it
+                        frame.slice = new dna.SourceSlice({
+                            __:    stream.slice,
+                            start: frame.at,
+                            end:   frame.til,
+                        })
                         return frame
                     }
                 }
             }
 
             if (line) {
+                /*
+                // DEBUG test error example
+                if (line.val.includes('lightweight')) lexer.xerr('it is not lightweight at all!',
+                    line.at + line.val.indexOf('lightweight'))
+                */
+
                 const tags = matchTags(line.val)
                 if (tags) {
                     frame.tags = tags
@@ -111,13 +137,19 @@ function parse(src, name, path) {
         }
 
         frame.til = stream.cur() - 1
+        frame.slice = new dna.SourceSlice({
+            __:    stream.slice,
+            start: frame.at,
+            end:   frame.til,
+        })
         return frame
     }
 
     const root = doFrame(0, name)
-    root.name = name
-    root.path = path
-    root.src  = src
+    root.name  = name
+    root.path  = path
+    root.src   = stream.src
+    root.slice = stream.slice
     root.totalLength = src.length
 
     console.dir(root)
