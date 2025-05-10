@@ -1,5 +1,7 @@
 const TAB = 4
 
+// TODO move these functions to a utilities trait?
+
 function isSpace(c) {
     return c === ' ' || c === '\t'
 }
@@ -47,18 +49,13 @@ function lpad(s, N) {
 function lexer(stream) {
     const { cur, getc, retc, aheadc, skipc, slice, eos } = stream
 
-    //const lines = [],
-    //      lineMarks = [ cur() ]
-    //let lineNum = 0
-
-
     function xerr(msg, pos) {
         pos = pos ?? cur()
 
         const at    = slice.lineCoordAt(pos),
               lines = slice.extractLines(at.lineNum - 4, at.lineNum)
               
-        throw new Error(`${msg} @${at.lineNum+1}.${at.linePos+1}:\n${lines}\n${lpad('', at.linePos)}^`)
+        throw new Error(`[${slice.context()}:${at.lineNum+1}.${at.linePos+1}] ${msg}:\n${lines}\n${lpad('', at.linePos)}^`)
     }
 
     function eatNewLine() {
@@ -101,7 +98,7 @@ function lexer(stream) {
 
     function rewind(shift) {
         const askPos = cur() + shift
-        if (shift > 0 || askPos < 0) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
+        if (shift > 0 || askPos < slice.start) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
         const newPos = stream.seek(askPos)
         const at = stream.slice.lineCoordAt(newPos)
         return newPos

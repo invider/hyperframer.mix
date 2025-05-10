@@ -112,6 +112,11 @@ class SourceSlice {
         return buf.join('\n')
     }
 
+    context() {
+        if (this.__) return this.__.context()
+        return this.name || 'unknown'
+    }
+
     getSource() {
         return this.src
     }

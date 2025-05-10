@@ -1,6 +1,9 @@
-function stream(sliceOrSource) {
+function stream(sliceOrSource, name, path) {
     const slice = isStr(sliceOrSource)? new dna.SourceSlice(sliceOrSource) : sliceOrSource
     const src   = slice.getSource()
+
+    if (isStr(name)) slice.name = name
+    if (isStr(path)) slice.path = path
 
     let pos = slice.start
 
