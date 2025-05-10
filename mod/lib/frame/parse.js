@@ -87,7 +87,7 @@ function parse(src, name, path) {
                         // TODO throw away prev line?
                         // rewind to the prev position
                         lexer.rewind(prev.at - stream.cur())
-                        frame.til = prev.at - 1
+                        frame.til = prev.at
                         //frame.src = stream.src.substring(frame.at, frame.til)
                         // detected the frame end, perfect time to create a slice for it
                         frame.slice = new dna.SourceSlice({
@@ -136,7 +136,7 @@ function parse(src, name, path) {
             line = lexer.nextLine()
         }
 
-        frame.til = stream.cur() - 1
+        frame.til = stream.cur()
         frame.slice = new dna.SourceSlice({
             __:    stream.slice,
             start: frame.at,

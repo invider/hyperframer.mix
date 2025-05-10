@@ -6,7 +6,7 @@ class SourceSlice {
             extend(this, {
                 __:    null,
                 start: 0,
-                end:   st.length - 1,
+                end:   st.length,
                 src:   st,
                 buf:   null,
             })
@@ -53,7 +53,11 @@ class SourceSlice {
 
     matchLines() {
         this.startLine = this.lineNumberAt(this.start)
-        this.endLine   = this.lineNumberAt(this.end)
+        this.endLine   = this.lineNumberAt(this.end - 1)
+    }
+
+    range(start, end) {
+        return this.src.substring(start, end)
     }
 
     lineNumberAt(pos) {

@@ -45,61 +45,57 @@ function lpad(s, N) {
 }
 
 function lexer(stream) {
-    const { cur, getc, retc, aheadc, skipc, eos } = stream
+    const { cur, getc, retc, aheadc, skipc, slice, eos } = stream
 
-    const lines = [],
-          lineMarks = [ cur() ]
-    let lineNum = 0
+    //const lines = [],
+    //      lineMarks = [ cur() ]
+    //let lineNum = 0
 
 
     function xerr(msg, pos) {
         pos = pos ?? cur()
 
-        const at    = stream.slice.lineCoordAt(pos),
-              lines = stream.slice.extractLines(at.lineNum - 4, at.lineNum)
+        const at    = slice.lineCoordAt(pos),
+              lines = slice.extractLines(at.lineNum - 4, at.lineNum)
               
         throw new Error(`${msg} @${at.lineNum+1}.${at.linePos+1}:\n${lines}\n${lpad('', at.linePos)}^`)
     }
 
     function eatNewLine() {
-        if (!isNewLine(aheadc())) return false
+        if (!isNewLine(aheadc())) return 0
 
-        const startsAt = lineMarks[lineNum],
-              endsAt   = cur(),
-              // TODO not optimal - refactor out to the root slice
-              line     = stream.src.substring(startsAt, endsAt),
-              c = getc()
-        if (c === '\r' && aheadc() === '\n') skipc()
+        const c = getc()
+        if (c === '\r' && aheadc() === '\n') {
+            skipc()
+            return 2
+        }
 
-        lines[lineNum++] = line
-        lineMarks[lineNum] = cur()
-
-        return true
+        return 1
     }
 
     function nextLine() {
         if (eos()) return
 
-        const at  = cur(),
-              ln  = lineNum,
-              buf = []
-        let   curLine = true
+        const at = cur()
+        let til = at,
+            curLine = true
 
         while (curLine) {
             if (eatNewLine() || eos()) {
                 curLine = false
             } else {
-                buf.push( getc() )
+                skipc()
+                til++
             }
         }
 
         return {
             type: 'line',
             at:   at,
-            ln:   ln,
-            val:  buf.join(''),
-            len:  buf.length,
-            til:  cur(),
+            ln:   slice.lineNumberAt(at),
+            val:  slice.range(at, til),
+            len:  til - at,
+            til:  til,
         }
     }
 
@@ -108,13 +104,13 @@ function lexer(stream) {
         if (shift > 0 || askPos < 0) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
         const newPos = stream.seek(askPos)
         const at = stream.slice.lineCoordAt(newPos)
-        lineNum = at.lineNum
         return newPos
     }
 
     return {
-        xerr,
         stream,
+
+        xerr,
         nextLine,
 
         rewind,
