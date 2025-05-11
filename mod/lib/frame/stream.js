@@ -42,6 +42,10 @@ function stream(sliceOrSource, name, path) {
         return src.charAt(next)
     }
 
+    function lookAt(line, linePos) {
+
+    }
+
     // skip the next character on the stream
     function skipc() {
         pos ++

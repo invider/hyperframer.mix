@@ -91,6 +91,23 @@ class SourceSlice {
         return
     }
 
+    lineLength(lineNum) {
+        if (this.__) return this.__.lineLength(lineNum)
+
+        if (lineNum < 0 || lineNum >= this.linePos.length) return -1
+        if (lineNum === this.linePos.length - 1) {
+            return this.src.length - this.linePos[lineNum]
+        } else {
+            return this.linePos[lineNum+1] - this.linePos[lineNum]
+        }
+    }
+
+    lookAt(line, linePos) {
+        if (this.__) return this.__.lookAt(line, linePos)
+
+        if (line < 0 || line >= this.linePos.length) return
+    }
+
     extractLine(ln) {
         if (this.__) return this.__.extractLine(ln)
         if (ln < 0 || ln >= this.linePos.length) return
