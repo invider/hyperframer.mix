@@ -1,17 +1,16 @@
-const TAB = 4
-
-// TODO move these functions to a utilities trait?
-
+/*
 function isSpace(c) {
     return c === ' ' || c === '\t'
 }
+*/
 
 function isNewLine(c) {
     return c === '\r' || c === '\n'
 }
 
+/*
 function isSeparator(c) {
-    return isSpace(c) || isNewLine(c) || isOperator(c)
+    return isSpace(c) || isNewLine(c)
 }
 
 function isDigit(c) {
@@ -37,26 +36,11 @@ function toHex(c) {
     else return -1
 }
 
-// TODO move to collider.jam text routines along with rpad() and hex/dec functions?
-function lpad(s, N) {
-    const n = N - s.length
-    for (let i = 0; i < n; i++) {
-        s = ' ' + s
-    }
-    return s
-}
+*/
 
-function lexer(stream) {
-    const { cur, getc, retc, aheadc, skipc, slice, eos } = stream
-
-    function xerr(msg, pos) {
-        pos = pos ?? cur()
-
-        const at    = slice.lineCoordAt(pos),
-              lines = slice.extractLines(at.lineNum - 4, at.lineNum)
-              
-        throw new Error(`[${slice.context()}:${at.lineNum+1}.${at.linePos+1}] ${msg}:\n${lines}\n${lpad('', at.linePos)}^`)
-    }
+// create a lexer over the provided stream, returns the next() function
+function lex(stream) {
+    const { slice, cur, getc, retc, aheadc, skipc, eos, xerr } = stream
 
     function eatNewLine() {
         if (!isNewLine(aheadc())) return 0
@@ -70,7 +54,7 @@ function lexer(stream) {
         return 1
     }
 
-    function nextLine() {
+    function next() {
         if (eos()) return
 
         const at = cur()
@@ -96,22 +80,5 @@ function lexer(stream) {
         }
     }
 
-    function rewind(shift) {
-        const askPos = cur() + shift
-        if (shift > 0 || askPos < slice.start) throw new Error(`Wrong rewind value [${shift}] for position [${cur()}]`)
-        const newPos = stream.seek(askPos)
-        const at = stream.slice.lineCoordAt(newPos)
-        return newPos
-    }
-
-    return {
-        stream,
-
-        xerr,
-        nextLine,
-
-        rewind,
-        curLine: () => lineNum,
-    }
-
+    return next
 }

@@ -102,10 +102,16 @@ class SourceSlice {
         }
     }
 
-    lookAt(line, linePos) {
-        if (this.__) return this.__.lookAt(line, linePos)
+    lookAt(lineNum, linePos) {
+        if (this.__) return this.__.lookAt(lineNum, linePos)
 
-        if (line < 0 || line >= this.linePos.length) return
+        if (lineNum < 0
+                || lineNum >= this.linePos.length
+                || linePos < 0
+                || linePos >= this.lineLength(lineNum)) {
+            return
+        }
+        return this.src.charAt(this.linePos[lineNum] + linePos)
     }
 
     extractLine(ln) {

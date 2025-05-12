@@ -5,5 +5,5 @@ function postSetup() {
     frames.forEach(f => dir[f.name] = f)
 
     console.dir(frames)
-    console.dir(dir.slides)
+    console.dir(dir.headers)
 }

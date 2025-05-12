@@ -1,9 +1,17 @@
-function stream(sliceOrSource, name, path) {
-    const slice = isStr(sliceOrSource)? new dna.SourceSlice(sliceOrSource) : sliceOrSource
-    const src   = slice.getSource()
+// TODO move to collider.jam text routines along with rpad() and hex/dec functions?
+function lpad(s, N) {
+    const n = N - s.length
+    for (let i = 0; i < n; i++) {
+        s = ' ' + s
+    }
+    return s
+}
 
-    if (isStr(name)) slice.name = name
-    if (isStr(path)) slice.path = path
+// input stream created from a slice of the source
+//
+// @param {SourceSlice} slice
+function stream(slice) {
+    const src = slice.getSource()
 
     let pos = slice.start
 
@@ -42,8 +50,8 @@ function stream(sliceOrSource, name, path) {
         return src.charAt(next)
     }
 
-    function lookAt(line, linePos) {
-
+    function lookAt(lineNum, linePos) {
+        return slice.lookAt(lineNum, linePos)
     }
 
     // skip the next character on the stream
@@ -63,6 +71,18 @@ function stream(sliceOrSource, name, path) {
         pos = clamp(at, slice.start, slice.end)
         return pos
     }
+
+    function rewind(shift) {
+        if (shift < 0) throw new Error(`Can't rewind forward!`)
+        const askPos = pos - shift
+        if (askPos < slice.start) {
+            throw new Error(`The rewind value [${shift}] is too high and goes beyond slice [${slice.start}:${slice.end}]`)
+        }
+        const newPos = this.seek(askPos)
+        //const at = slice.lineCoordAt(newPos)
+        return newPos
+    }
+
 
     function mark() {
         marks.push(pos)
@@ -96,6 +116,17 @@ function stream(sliceOrSource, name, path) {
     }
     */
 
+    function xerr(msg, errorPos) {
+        // TODO should it be clamped over the slice or the whole source?
+        errorPos = clamp(errorPos ?? pos, 0, src.length)
+
+        const at    = slice.lineCoordAt(errorPos),
+              lines = slice.extractLines(at.lineNum - 4, at.lineNum)
+              
+        throw new Error(`[${slice.context()}:${at.lineNum+1}.${at.linePos+1}] ${msg}:\n${lines}\n${lpad('', at.linePos)}^`)
+    }
+
+
     return {
         src,
         slice,
@@ -108,11 +139,15 @@ function stream(sliceOrSource, name, path) {
         skipc,
         eatc,
         seek,
+        rewind,
+
         mark,
         restore,
         drop,
         eos,
         //expectc,
         //notc,
+        
+        xerr,
     }
 }

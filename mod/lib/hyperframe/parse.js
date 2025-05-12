@@ -37,10 +37,10 @@ function matchFlags(tags) {
     }
 }
 
-function parse(src, name, path) {
-    const flags = {}
-    const stream = lib.frame.stream(src, name, path)
-    const lexer = lib.frame.lexer(stream)
+function parse(slice) {
+    const flags  = {}
+    const stream = lib.hyperframe.stream(slice)
+    const next = lib.hyperframe.lex(stream)
 
     function doFrame(level, title, nextFrame) {
         const frame = nextFrame || new dna.HyperFrame({
@@ -52,7 +52,7 @@ function parse(src, name, path) {
         })
 
         // go over the source line by line 
-        let prev, line = lexer.nextLine()
+        let prev, line = next()
 
         while (line !== undefined) {
             //log(`#${line.ln+1}:[${line.val}]`)
@@ -86,15 +86,18 @@ function parse(src, name, path) {
                         // same level - close the current frame and return
                         // TODO throw away prev line?
                         // rewind to the prev position
-                        lexer.rewind(prev.at - stream.cur())
+                        stream.rewind(stream.cur() - prev.at)
                         frame.til = prev.at
-                        //frame.src = stream.src.substring(frame.at, frame.til)
+
                         // detected the frame end, perfect time to create a slice for it
                         frame.slice = new dna.SourceSlice({
                             __:    stream.slice,
                             start: frame.at,
                             end:   frame.til,
                         })
+                        // DEBUG preserve the source for debug purposes
+                        frame.src = frame.slice.toString()
+
                         return frame
                     }
                 }
@@ -103,7 +106,7 @@ function parse(src, name, path) {
             if (line) {
                 /*
                 // DEBUG test error example
-                if (line.val.includes('lightweight')) lexer.xerr('it is not lightweight at all!',
+                if (line.val.includes('lightweight')) stream.xerr('it is not lightweight at all!',
                     line.at + line.val.indexOf('lightweight'))
                 */
 
@@ -133,7 +136,7 @@ function parse(src, name, path) {
                 prev = null
             }
 
-            line = lexer.nextLine()
+            line = next()
         }
 
         frame.til = stream.cur()
@@ -146,12 +149,9 @@ function parse(src, name, path) {
     }
 
     const root = doFrame(0, name)
-    root.name  = name
-    root.path  = path
-    root.src   = stream.src
-    root.slice = stream.slice
-    root.totalLength = src.length
+    root.slice = slice
+    root.src   = slice.getSource()
+    root.totalLength = root.src.length
 
-    console.dir(root)
     return root
 }

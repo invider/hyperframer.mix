@@ -1,0 +1,41 @@
+====================================
+Top-Level Header with a Substructure
+------------------------------------
+yaml: Goes Here!
+date: 2025 
+tags: one, two, three
+subStructure:
+    prop1: "Value - 1"
+    prop2: 202
+subArray:
+    - 101
+    - 102
+    - 103
+====================================
+
+
+=======================
+Simple Top-Level Header
+=======================
+
+
+Second-Level Header
+===================
+
+
+=== Third Level Header ===
+
+===== Another Third Level Header of bigger weight (3.5) =====
+
+= Simlest Third Level Header (3.1) =
+
+
++++=======================+++
+=  Stil a top-level header  =
+-----------------------------
+but with a flavor!
+Arbitrary content can go here
+=============================
+
+
+
