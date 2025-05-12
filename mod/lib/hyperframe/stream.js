@@ -1,12 +1,3 @@
-// TODO move to collider.jam text routines along with rpad() and hex/dec functions?
-function lpad(s, N) {
-    const n = N - s.length
-    for (let i = 0; i < n; i++) {
-        s = ' ' + s
-    }
-    return s
-}
-
 // input stream created from a slice of the source
 //
 // @param {SourceSlice} slice
@@ -120,10 +111,13 @@ function stream(slice) {
         // TODO should it be clamped over the slice or the whole source?
         errorPos = clamp(errorPos ?? pos, 0, src.length)
 
-        const at    = slice.lineCoordAt(errorPos),
-              lines = slice.extractLines(at.lineNum - 4, at.lineNum)
+        // TODO make the context printout (LINES BEFORE & AFTER) environment-configurable
+        const at     = slice.lineCoordAt(errorPos),
+              lines1 = slice.extractLines(at.lineNum - 4, at.lineNum),
+              lines2 = slice.extractLines(at.lineNum + 1, at.lineNum + 3)
               
-        throw new Error(`[${slice.context()}:${at.lineNum+1}.${at.linePos+1}] ${msg}:\n${lines}\n${lpad('', at.linePos)}^`)
+        throw new Error(`[${slice.context()}:${at.lineNum+1}.${at.linePos+1}] ${msg}\n${lines1}\n`
+            + `${lib.util.lpad('', at.linePos, '_')}^\n${lines2}`)
     }
 
 

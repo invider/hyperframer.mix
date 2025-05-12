@@ -38,8 +38,8 @@ function toHex(c) {
 
 */
 
-// create a lexer over the provided stream, returns the next() function
-function lex(stream) {
+// create a line tokenizer over the provided stream, returns the next() function
+function lines(stream) {
     const { slice, cur, getc, retc, aheadc, skipc, eos, xerr } = stream
 
     function eatNewLine() {

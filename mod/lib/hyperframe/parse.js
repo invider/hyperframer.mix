@@ -40,7 +40,11 @@ function matchFlags(tags) {
 function parse(slice) {
     const flags  = {}
     const stream = lib.hyperframe.stream(slice)
-    const next = lib.hyperframe.lex(stream)
+    const nextLine = lib.hyperframe.lex.lines(stream)
+
+    function parseFrame() {
+        // handle subframe parsing with specialized preprocessor/lexer/parser pipelines
+    }
 
     function doFrame(level, title, nextFrame) {
         const frame = nextFrame || new dna.HyperFrame({
@@ -52,7 +56,7 @@ function parse(slice) {
         })
 
         // go over the source line by line 
-        let prev, line = next()
+        let prev, line = nextLine()
 
         while (line !== undefined) {
             //log(`#${line.ln+1}:[${line.val}]`)
@@ -98,6 +102,7 @@ function parse(slice) {
                         // DEBUG preserve the source for debug purposes
                         frame.src = frame.slice.toString()
 
+                        parseFrame(frame)
                         return frame
                     }
                 }
@@ -106,8 +111,8 @@ function parse(slice) {
             if (line) {
                 /*
                 // DEBUG test error example
-                if (line.val.includes('lightweight')) stream.xerr('it is not lightweight at all!',
-                    line.at + line.val.indexOf('lightweight'))
+                if (line.val.includes('markup')) stream.xerr('it is not lightweight at all!',
+                    line.at + line.val.indexOf('markup'))
                 */
 
                 const tags = matchTags(line.val)
@@ -136,7 +141,7 @@ function parse(slice) {
                 prev = null
             }
 
-            line = next()
+            line = nextLine()
         }
 
         frame.til = stream.cur()
