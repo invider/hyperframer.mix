@@ -2,13 +2,11 @@
 function isSpace(c) {
     return c === ' ' || c === '\t'
 }
-*/
 
 function isNewLine(c) {
     return c === '\r' || c === '\n'
 }
 
-/*
 function isSeparator(c) {
     return isSpace(c) || isNewLine(c)
 }
@@ -40,17 +38,17 @@ function toHex(c) {
 
 // create a line tokenizer over the provided stream, returns the next() function
 function lines(stream) {
-    const { slice, cur, getc, retc, aheadc, skipc, eos, xerr } = stream
+    const { slice, cur, getc, getcc, retc, aheadc, aheadcc, skipc, eos, xerr } = stream
 
     function eatNewLine() {
-        if (!isNewLine(aheadc())) return 0
+        const code = aheadcc()
+        if (code !== 0x0D && code !== 0x0A) return 0
 
-        const c = getc()
-        if (c === '\r' && aheadc() === '\n') {
+        skipc()
+        if (code === 0x0D && aheadcc() === 0x0A) {
             skipc()
             return 2
         }
-
         return 1
     }
 
@@ -58,17 +56,17 @@ function lines(stream) {
         if (eos()) return
 
         const at = cur()
-        let til = at,
-            curLine = true
+        let curLine = true,
+            eol     = 0
 
         while (curLine) {
-            if (eatNewLine() || eos()) {
+            if ((eol = eatNewLine()) || eos()) {
                 curLine = false
             } else {
                 skipc()
-                til++
             }
         }
+        let til = cur()
 
         return {
             type: 'line',
@@ -77,7 +75,11 @@ function lines(stream) {
             val:  slice.range(at, til),
             len:  til - at,
             til:  til,
+            eol:  eol,
         }
+    }
+
+    next.matchHeader = function() {
     }
 
     return next

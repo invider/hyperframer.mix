@@ -22,7 +22,7 @@ class SourceSlice {
         }
 
         if (!this.__) this.indexLines()
-        else this.matchLines()
+        else this.defineLineRange()
     }
 
     indexLines() {
@@ -51,9 +51,28 @@ class SourceSlice {
         this.endLine   = this.lines - 1
     }
 
-    matchLines() {
+    defineLineRange() {
         this.startLine = this.lineNumberAt(this.start)
         this.endLine   = this.lineNumberAt(this.end - 1)
+    }
+
+    clone() {
+        return new dna.SourceSlice(this)
+    }
+
+    join(followingSlice) {
+        if (!isObj(followingSlice) || !(followingSlice instanceof dna.SourceSlice)) throw new Error(`Expecting a SourceSlice for join`)
+        if (followingSlice.src !== this.src) throw new Error(`The joining slice source MUST be the same as this slice source!`)
+        if (followingSlice.start !== this.end) {
+            throw new Error(
+                `The joining slice MUST follow this one! Expected to start @${this.end}, but @${followingSlice.start} found instead!`)
+        }
+        this.end = followingSlice.end
+        this.buf = null // MUST clear the cache!
+    }
+
+    joinAll(followingSlices) {
+        followingSlices.forEach(slice => this.join(slice))
     }
 
     range(start, end) {

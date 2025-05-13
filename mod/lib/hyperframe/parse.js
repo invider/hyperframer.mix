@@ -47,6 +47,7 @@ function parse(slice) {
     }
 
     function doFrame(level, title, nextFrame) {
+
         const frame = nextFrame || new dna.HyperFrame({
             at:     stream.cur(),
             level:  level,
@@ -61,6 +62,7 @@ function parse(slice) {
         while (line !== undefined) {
             //log(`#${line.ln+1}:[${line.val}]`)
 
+            /*
             // multi-line header
             if (prev && prev.val.length > 0) {
                 // we had a non-empty line before this one
@@ -107,14 +109,16 @@ function parse(slice) {
                     }
                 }
             }
+            */
 
-            if (line) {
                 /*
                 // DEBUG test error example
                 if (line.val.includes('markup')) stream.xerr('it is not lightweight at all!',
                     line.at + line.val.indexOf('markup'))
                 */
 
+            /*
+            if (line) {
                 const tags = matchTags(line.val)
                 if (tags) {
                     frame.tags = tags
@@ -140,6 +144,8 @@ function parse(slice) {
             } else {
                 prev = null
             }
+            */
+            console.dir(line)
 
             line = nextLine()
         }

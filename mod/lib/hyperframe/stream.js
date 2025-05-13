@@ -17,10 +17,16 @@ function stream(slice) {
         return pos - slice.start
     }
 
-    // get current character from the stream
+    // get next character from the stream
     function getc() {
         if (pos < slice.start || pos > slice.end) return
         return src.charAt(pos++)
+    }
+
+    // get next character code from the stream
+    function getcc() {
+        if (pos < slice.start || pos > slice.end) return -1
+        return src.charCodeAt(pos++)
     }
 
     // return a character back to the stream (decrement position)
@@ -29,15 +35,21 @@ function stream(slice) {
         pos --
     }
 
-    // return the character ahead - the next that is going to be returned by getc()
+    // return the character ahead without moving the stream forward
     function aheadc() {
-        if (pos < slice.start || pos > slice.end) return
+        if (pos < slice.start || pos >= slice.end) return
         return src.charAt(pos)
+    }
+
+    // return the character code ahead without moving the stream forward
+    function aheadcc() {
+        if (pos < slice.start || pos >= slice.end) return -1
+        return src.charCodeAt(pos)
     }
 
     function lookAhead(n) {
         const next = pos + n - 1
-        if (next < slice.start || next > slice.end) return
+        if (next < slice.start || next >= slice.end) return
         return src.charAt(next)
     }
 
@@ -48,6 +60,10 @@ function stream(slice) {
     // skip the next character on the stream
     function skipc() {
         pos ++
+    }
+
+    function skip(n) {
+        pos += n
     }
 
     // eat all following instances of the provided character from the input stream, return how many has been eaten
@@ -90,7 +106,7 @@ function stream(slice) {
     }
 
     function eos() {
-        return (pos > slice.end)
+        return (pos >= slice.end)
     }
 
     /*
@@ -127,10 +143,13 @@ function stream(slice) {
 
         cur,
         getc,
+        getcc,
         retc,
         aheadc,
+        aheadcc,
         lookAhead,
         skipc,
+        skip,
         eatc,
         seek,
         rewind,
