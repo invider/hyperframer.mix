@@ -3,6 +3,7 @@
 Locked Data
 ===========
 
+
 - proprietary formats
 - stored in custom DB schemas
 - hold hostage by cloud software providers
@@ -16,4 +17,5 @@ HyperFrame
 - free-form database
 - lightweight markup
 - microformats
+- T
 

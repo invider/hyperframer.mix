@@ -36,6 +36,13 @@ function toHex(c) {
 
 */
 
+// TODO how to handle tabs? Maybe if tabs are there, then indentation MUST be tabs-only!
+const TAB     = 4
+
+const EOL     = 0,
+      INDENT  = 1,
+      CONTENT = 2
+
 // create a line tokenizer over the provided stream, returns the next() function
 function lines(stream) {
     const { slice, cur, getc, getcc, retc, aheadc, aheadcc, skipc, eos, xerr } = stream
@@ -55,31 +62,101 @@ function lines(stream) {
     function next() {
         if (eos()) return
 
-        const at = cur()
-        let curLine = true,
-            eol     = 0
 
-        while (curLine) {
+        const at = cur()
+
+        let indent  = 0,
+            outdent = 0,
+            block   = false,
+            span    = 1,
+            eol     = 0,
+            state   = INDENT
+        let prevc, spans, spanDir
+
+        function closeSpan() {
+            if (span <= 2) {
+                span = 1
+                return
+            }
+
+            if (!spans) {
+                spans   = []
+                spanDir = {}
+            }
+
+            const lastSpan = {
+                ch:  prevc,
+                at:  cur() - at - span - 1,
+                len: span,
+            }
+            spans.push(lastSpan)
+            if (!spanDir[prevc] || spanDir[prevc].len < span) {
+                spanDir[prevc] = lastSpan
+            }
+            span = 1
+        }
+
+        while (state) {
             if ((eol = eatNewLine()) || eos()) {
-                curLine = false
+                state = EOL
+                closeSpan()
             } else {
-                skipc()
+                const c = getc()
+
+                switch(state) {
+                    case INDENT:
+                        if (c === ' ') {
+                            indent ++
+                        } else if (c === '\t') {
+                            ident += TAB
+                        } else {
+                            state = CONTENT
+                            block = true
+                        }
+                        break
+                    case CONTENT:
+                        if (c === ' ') {
+                            outdent++
+                            closeSpan()
+                        } else if (c === '\t') {
+                            outdent += TAB
+                            closeSpan()
+                        } else {
+                            if (outdent > 0) block = false
+                            outdent = 0
+                            if (c === prevc) {
+                                span++
+                            } else {
+                                closeSpan()
+                            }
+                        }
+                        break
+                }
+
+                prevc = c
             }
         }
         let til = cur()
 
-        return {
-            type: 'line',
-            at:   at,
+        const lineSlice = {
+            type: 'lineSlice',
             ln:   slice.lineNumberAt(at),
-            val:  slice.range(at, til),
-            len:  til - at,
-            til:  til,
-            eol:  eol,
+            at,
+            til,
+            len:  til - at - eol,
+            val:  slice.subSlice(at, til),
+            EOL:  eol, // 0 - EOF, 1 - CR/LF, 2 - CRLF
+            indent,
+            outdent,
+            block,
+            txt:  env.config.debugSlices? stream.src.substring(at, til) : null,
         }
-    }
+        if (spans) {
+            lineSlice.spans = spans
+            lineSlice.span  = spanDir
+        }
 
-    next.matchHeader = function() {
+        return lineSlice
     }
 
     return next

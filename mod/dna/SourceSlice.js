@@ -23,6 +23,10 @@ class SourceSlice {
 
         if (!this.__) this.indexLines()
         else this.defineLineRange()
+
+        if (env.config.debugSlices) {
+            this.buf = this.src.substring(this.start, this.end)
+        }
     }
 
     indexLines() {
@@ -76,7 +80,20 @@ class SourceSlice {
     }
 
     range(start, end) {
+        start = clamp(start, this.start, this.end)
+        end   = clamp(end,   this.start, this.end)
         return this.src.substring(start, end)
+    }
+
+    subSlice(start, end) {
+        start = clamp(start, this.start, this.end)
+        end   = clamp(end,   this.start, this.end)
+        return new dna.SourceSlice({
+            __:    this,
+            src:   this.src,
+            start: start,
+            end:   end,
+        })
     }
 
     lineNumberAt(pos) {
@@ -133,6 +150,20 @@ class SourceSlice {
         return this.src.charAt(this.linePos[lineNum] + linePos)
     }
 
+    // character at the slice-relative position
+    charAt(lpos) {
+        const pos = this.start + lpos
+        if (pos < this.start || pos >= this.end) return
+        return this.src.charAt(pos)
+    }
+
+    // character code at the slice-relative position
+    charCodeAt(lpos) {
+        const pos = this.start + lpos
+        if (pos < this.start || pos >= this.end) return -1
+        return this.src.charCodeAt(pos)
+    }
+
     extractLine(ln) {
         if (this.__) return this.__.extractLine(ln)
         if (ln < 0 || ln >= this.linePos.length) return
@@ -161,6 +192,10 @@ class SourceSlice {
 
     getSource() {
         return this.src
+    }
+
+    getLength() {
+        return this.end - this.start
     }
 
     toString() {

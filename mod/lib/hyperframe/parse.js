@@ -1,3 +1,7 @@
+function matchContiniousDoubleLine() {
+
+}
+
 function matchHeader(line, leadc, level) {
     for (let i = 0; i < line.length; i++) {
         if (line.charAt(i) !== leadc) return
@@ -16,6 +20,7 @@ function matchHeaders(line) {
     }
 }
 
+/*
 function matchTags(line) {
     line = line.trim()
     if (line.charAt(0) === '#') {
@@ -36,6 +41,7 @@ function matchFlags(tags) {
             return tags[0]
     }
 }
+*/
 
 function parse(slice) {
     const flags  = {}
@@ -53,7 +59,7 @@ function parse(slice) {
             level:  level,
             title:  title ?? '',
             lines:  [],
-            tokens: [],
+            slice:  stream.slice,
         })
 
         // go over the source line by line 
@@ -62,27 +68,22 @@ function parse(slice) {
         while (line !== undefined) {
             //log(`#${line.ln+1}:[${line.val}]`)
 
-            /*
             // multi-line header
-            if (prev && prev.val.length > 0) {
+            if (prev && prev.val.len > 0) {
                 // we had a non-empty line before this one
 
                 let headerTk = matchHeaders(line.val)
                 if (headerTk) {
                     const headerTitle = frame.lines.pop()
-                    const lastToken   = frame.tokens.pop()
                     if (headerTk.level > level) {
                         const nextFrame = new dna.HyperFrame({
                             at:     lastToken.at,
                             level:  level,
                             title:  title ?? '',
                             lines:  [],
-                            tokens: [],
                         })
                         nextFrame.lines.push(headerTitle)
-                        nextFrame.tokens.push(lastToken)
                         nextFrame.lines.push(line.val)
-                        nextFrame.tokens.push(headerTk)
 
                         const subFrame = doFrame(headerTk.level, prev.val, nextFrame)
                         if (subFrame) frame.attach(subFrame)
@@ -109,7 +110,6 @@ function parse(slice) {
                     }
                 }
             }
-            */
 
                 /*
                 // DEBUG test error example
@@ -139,7 +139,6 @@ function parse(slice) {
                 }
 
                 frame.lines.push(line.val)
-                frame.tokens.push(line)
                 prev = line
             } else {
                 prev = null
@@ -160,9 +159,9 @@ function parse(slice) {
     }
 
     const root = doFrame(0, name)
-    root.slice = slice
-    root.src   = slice.getSource()
-    root.totalLength = root.src.length
+    //root.slice = slice
+    //root.src   = slice.getSource()
+    //root.totalLength = root.src.length
 
     return root
 }
