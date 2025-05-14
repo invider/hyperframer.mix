@@ -138,19 +138,25 @@ function lines(stream) {
         }
         let til = cur()
 
+        const len = til - at - eol
         const lineSlice = {
             type: 'lineSlice',
             ln:   slice.lineNumberAt(at),
             at,
             til,
-            len:  til - at - eol,
+            len,
             val:  slice.subSlice(at, til),
             EOL:  eol, // 0 - EOF, 1 - CR/LF, 2 - CRLF
             indent,
             outdent,
             block,
+            contentLen: len - indent - outdent, 
+            getContent: function() {
+                return this.val.src.substring(this.at + this.indent, this.til - this.outdent - this.EOL)
+            },
             txt:  env.config.debugSlices? stream.src.substring(at, til) : null,
         }
+
         if (spans) {
             lineSlice.spans = spans
             lineSlice.span  = spanDir
